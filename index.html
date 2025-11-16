@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bonita Tú - Tienda de Maquillaje</title>
+  <!-- Página sin diseño. Agrega tu CSS en un archivo separado o dentro de <style>. -->
+  <!-- Enlaza tu hoja de estilos aquí -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ENCABEZADO -->
+  <header id="header">
+    <div id="logoArea" aria-label="logo y nombre de la tienda">
+      <!-- Reemplaza src con tu logo si lo tienes -->
+      <img id="logo" src="logo.PNG" alt="Logo Bonita Tú" width="48" height="48" />
+      <h1 id="brandName">Bonita Tú</h1>
+    </div>
+
+    <div id="searchArea">
+      <label for="searchInput" class="sr-only">Buscar productos</label>
+      <input id="searchInput" type="search" placeholder="Buscar productos..." />
+      <button id="searchBtn" type="button">Buscar</button>
+    </div>
+
+    <div id="cartArea">
+      <button id="cartButton" type="button" aria-haspopup="dialog" aria-controls="cartPanel">
+        🛒 Carrito <span id="cartCount">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- PANEL DEL CARRITO (toggle con el botón del encabezado) -->
+  <section id="cartPanel" hidden aria-label="Carrito de compras" role="dialog" aria-modal="false">
+    <h2>Carrito</h2>
+    <ul id="cartList"></ul>
+    <div id="cartSummary">
+      <span id="cartItemsTotal">0</span> artículo(s)
+      • Total: $<span id="cartTotal">0.00</span>
+    </div>
+    <div>
+      <button id="clearCartBtn" type="button">Vaciar carrito</button>
+      <button id="checkoutBtn" type="button">Finalizar compra</button>
+    </div>
+  </section>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main id="main">
+    <!-- FILTROS -->
+    <section id="filters" aria-label="Filtros de productos">
+      <h2>Filtros</h2>
+      <div>
+        <label for="categorySelect">Categorías</label>
+        <!-- Selector simple (igual que Ordenar) -->
+        <select id="categorySelect">
+          <option value="">Todas las categorías</option>
+          <option value="cuidado-facial">Cuidado facial</option>
+          <option value="ojos">Ojos</option>
+          <option value="labios">Labios</option>
+          <option value="productos-capilares">Productos capilares</option>
+          <option value="accesorios-maquillaje">Accesorios de maquillaje</option>
+          <option value="cejas">Cejas</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="sortSelect">Ordenar</label>
+        <!-- Combo box simple para ordenar -->
+        <select id="sortSelect">
+          <option value="az" selected>A a Z</option>
+          <option value="price-desc">Mayor precio a menor</option>
+          <option value="price-asc">Menor precio a mayor</option>
+        </select>
+      </div>
+
+      <button id="applyFiltersBtn" type="button">Aplicar filtros</button>
+      <button id="clearFiltersBtn" type="button">Limpiar filtros</button>
+    </section>
+
+    <!-- LISTA DE PRODUCTOS -->
+    <section id="products" aria-label="Listado de productos">
+      <h2>Productos</h2>
+      <div id="productsGrid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <!-- Burbuja WhatsApp -->
+  <a id="whatsappBubble" href="#" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
+    🟢
+  </a>
+
+  <!-- TEMPLATE DE PRODUCTO (sin estilos) -->
+  <template id="productCardTemplate">
+    <article class="product-card">
+      <img class="product-image" alt="Imagen del producto" loading="lazy" />
+      <h3 class="product-name"><!-- EDITABLE: Nombre del producto --></h3>
+      <div class="product-meta">
+        <span class="product-price"></span>
+      </div>
+      <div class="qty-control" role="group" aria-label="Cantidad">
+        <button type="button" class="qty-btn qty-dec" aria-label="Disminuir">−</button>
+        <input type="text" class="qty-value" value="1" inputmode="numeric" aria-label="Cantidad seleccionada" />
+        <button type="button" class="qty-btn qty-inc" aria-label="Aumentar">+</button>
+      </div>
+      <button class="add-to-cart" type="button">Añadir al carrito</button>
+    </article>
+  </template>
+
+  <script>
+    // Datos simulados en memoria (sin base de datos)
+    // 163 productos totales. Usamos las imágenes disponibles en el directorio.
+    // Para que puedas editar los nombres fácilmente, cada producto tiene un campo 'name' con comentario EDITABLE.
+
+    // Definición de categorías disponibles
+    const CATEGORIES = [
+      'cuidado-facial',
+      'ojos',
+      'labios',
+      'productos-capilares',
+      'accesorios-maquillaje',
+      'cejas'
+    ];
+
+    // Generar la lista de imágenes disponibles detectadas manualmente (img_1.jpg ... img_163.jpg y algunos faltantes/variantes)
+    // Nota: Algunas numeraciones no son consecutivas en el directorio, pero usamos un mapeo robusto.
+    const imageFiles = [
+      'img_1.jpg','img_2.jpg','img_3.jpg','img_4.jpg','img_5.jpg','img_6.jpg','img_7.jpg','img_8.jpg','img_9.jpg','img_10.jpg',
+      'img_11.jpg','img_12.jpg','img_13.jpg','img_14.jpg','img_15.jpg','img_16.jpg','img_17.jpg','img_19.jpg','img_20.jpg','img_21.jpg',
+      'img_22.jpg','img_23.jpg','img_24.jpg','img_25.jpg','img_26.jpg','img_27.jpg','img_28.jpg','img_29.jpg','img_30.jpg','img_31.jpg',
+      'img_32.jpg','img_33.jpg','img_34.jpg','img_35.jpg','img_36.jpg','img_37.jpg','img_38.jpg','img_39.jpg','img_40.jpg','img_41.jpg',
+      'img_42.jpg','img_43.jpg','img_44.jpg','img_45.jpg','img_46.jpg','img_47.jpg','img_48.jpg','img_49.jpg','img_50.jpg','img_51.jpg',
+      'img_52.jpg','img_53.jpg','img_54.jpg','img_55.jpg','img_56.jpg','img_57.jpg','img_58.jpg','img_59.jpg','img_60.jpg','img_61.jpg',
+      'img_62.jpg','img_63.jpg','img_64.jpg','img_65.jpg','img_66.jpg','img_67.jpg','img_68.jpg','img_69.jpg','img_70.jpg','img_71.jpg',
+      'img_72.jpg','img_73.jpg','img_74.jpg','img_75.jpg','img_76.jpg','img_77.jpg','img_78.jpg','img_79.jpg','img_80.jpg','img_82.jpg',
+      'img_83.jpg','img_84.jpg','img_85.jpg','img_86.jpg','img_87.jpg','img_88.jpg','img_89.jpg','img_90.jpg','img_91.jpg','img_92.jpg',
+      'img_93.jpg','img_94.jpg','img_95.jpg','img_96.jpg','img_97.jpg','img_98.jpg','img_99.jpg','img_100.jpg','img_101.jpg','img_102.jpg',
+      'img_103.jpg','img_104.jpg','img_105.jpg','img_106.jpg','img_107.jpg','img_108.jpg','img_109.jpg','img_110.jpg','img_111.jpg','img_112.jpg',
+      'img_113.jpg','img_114.jpg','img_115.jpg','img_116.jpg','img_117.jpg','img_118.jpg','img_119.jpg','img_120.jpg','img_121.jpg','img_122.jpg',
+      'img_123.jpg','img_124.jpg','img_125.jpg','img_126.jpg','img_127.jpg','img_128.jpg','img_129.jpg','img_130.jpg','img_132.jpg','img_133.jpg',
+      'img_134.jpg','img_135.jpg','img_136.jpg','img_137.jpg','img_138.jpg','img_139.jpg','img_140.jpg','img_141.jpg','img_142.jpg','img_143.jpg',
+      'img_144.jpg','img_145.jpg','img_146.jpg','img_147.jpg','img_148.jpg','img_149.jpg','img_150.jpg','img_151.jpg','img_152.jpg','img_153.jpg',
+      'img_154.jpg','img_155.jpg','img_156.jpg','img_157.jpg','img_158.jpg','img_159.jpg','img_160.jpg','img_161.jpg','img_162.jpg','img_163.jpg'
+    ];
+
+    // Generador de productos: 163 items basados en imágenes listadas
+    const products = [];
+    const totalNeeded = 163;
+
+    // Utilidad para elegir una categoría pseudo-aleatoria pero determinística por índice
+    function categoryByIndex(i) {
+      const mapping = [
+        'cuidado-facial','ojos','labios','productos-capilares','accesorios-maquillaje','cejas'
+      ];
+      return mapping[i % mapping.length];
+    }
+
+    // Utilidad para generar un precio base estable según índice
+    function priceByIndex(i) {
+      const base = 5 + (i % 50); // 5 a 54
+      const cents = (i * 7) % 100; // variación de centavos
+      return parseFloat((base + cents / 100).toFixed(2));
+    }
+
+    // Crear productos hasta 163; reusar imágenes si faltan
+    for (let i = 0; i < totalNeeded; i++) {
+      const img = imageFiles[i % imageFiles.length];
+      products.push({
+        id: i + 1,
+        // EDITABLE: Cambia el nombre del producto aquí
+        name: `Producto ${i + 1}`,
+        image: img,
+        category: categoryByIndex(i),
+        price: priceByIndex(i)
+      });
+    }
+
+    // Estado del carrito en memoria
+    const cart = {
+      items: [], // { id, name, price, qty }
+    };
+
+    function saveCart() {
+      // Sin base de datos; opcionalmente usar localStorage para persistir en el navegador
+      try {
+        localStorage.setItem('bonitaTuCart', JSON.stringify(cart.items));
+      } catch {}
+    }
+
+    function loadCart() {
+      try {
+        const raw = localStorage.getItem('bonitaTuCart');
+        if (raw) cart.items = JSON.parse(raw);
+      } catch {}
+    }
+
+    function renderCart() {
+      const list = document.getElementById('cartList');
+      const countEl = document.getElementById('cartCount');
+      const totalEl = document.getElementById('cartTotal');
+      const itemsTotalEl = document.getElementById('cartItemsTotal');
+
+      list.innerHTML = '';
+      let totalItems = 0;
+      let total = 0;
+
+      cart.items.forEach((it, idx) => {
+        totalItems += it.qty;
+        total += it.price * it.qty;
+        const li = document.createElement('li');
+        li.textContent = `${it.name} x${it.qty} - $${(it.price * it.qty).toFixed(2)}`;
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.textContent = 'Eliminar';
+        removeBtn.addEventListener('click', () => {
+          cart.items.splice(idx, 1);
+          saveCart();
+          renderCart();
+        });
+        li.appendChild(removeBtn);
+        list.appendChild(li);
+      });
+
+      countEl.textContent = String(totalItems);
+      itemsTotalEl.textContent = String(totalItems);
+      totalEl.textContent = total.toFixed(2);
+    }
+
+    function addToCart(product, qty = 1) {
+      const q = Math.min(10, Math.max(1, parseInt(qty, 10) || 1));
+      const existing = cart.items.find(it => it.id === product.id);
+      if (existing) {
+        existing.qty += q;
+      } else {
+        cart.items.push({ id: product.id, name: product.name, price: product.price, qty: q });
+      }
+      saveCart();
+      renderCart();
+    }
+
+    // Renderizado de productos
+    const grid = document.getElementById('productsGrid');
+    const tmpl = document.getElementById('productCardTemplate');
+
+    function renderProducts(list) {
+      grid.innerHTML = '';
+      list.forEach(p => {
+        const node = tmpl.content.cloneNode(true);
+        const img = node.querySelector('.product-image');
+        const nameEl = node.querySelector('.product-name');
+        const priceEl = node.querySelector('.product-price');
+        const btn = node.querySelector('.add-to-cart');
+        const qtyDec = node.querySelector('.qty-dec');
+        const qtyInc = node.querySelector('.qty-inc');
+        const qtyInput = node.querySelector('.qty-value');
+
+        img.src = p.image;
+        img.alt = p.name;
+        // EDITABLE: Este es el texto visible del nombre del producto
+        nameEl.textContent = p.name;
+        priceEl.textContent = `${p.price.toFixed(2)}`;
+
+        qtyDec.addEventListener('click', () => {
+          const val = Math.max(1, (parseInt(qtyInput.value, 10) || 1) - 1);
+          qtyInput.value = String(val);
+        });
+        qtyInc.addEventListener('click', () => {
+          const val = Math.min(10, Math.max(1, (parseInt(qtyInput.value, 10) || 1) + 1));
+          qtyInput.value = String(val);
+        });
+        qtyInput.addEventListener('input', () => {
+          // Sanitizar: solo números, rango 1..10
+          const num = parseInt(qtyInput.value.replace(/[^0-9]/g, ''), 10);
+          const bounded = Math.min(10, Math.max(1, isNaN(num) ? 1 : num));
+          qtyInput.value = String(bounded);
+        });
+
+        btn.addEventListener('click', () => addToCart(p, parseInt(qtyInput.value, 10) || 1));
+
+        grid.appendChild(node);
+      });
+    }
+
+    // Filtro y orden
+    function getActiveCategories() {
+      const select = document.getElementById('categorySelect');
+      const value = select ? select.value : '';
+      return value ? [value] : [];
+    }
+
+    function getActiveSort() {
+      const select = document.getElementById('sortSelect');
+      return select ? select.value : 'az';
+    }
+
+    function applyFilters() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const cats = getActiveCategories();
+      const sort = getActiveSort();
+
+      let list = products.filter(p => {
+        const matchesText = !q || p.name.toLowerCase().includes(q);
+        const matchesCat = cats.length === 0 || cats.includes(p.category);
+        return matchesText && matchesCat;
+      });
+
+      if (sort === 'az') {
+        list.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+      } else if (sort === 'price-desc') {
+        list.sort((a, b) => b.price - a.price);
+      } else if (sort === 'price-asc') {
+        list.sort((a, b) => a.price - b.price);
+      }
+
+      renderProducts(list);
+    }
+
+    // Eventos UI
+    document.getElementById('searchBtn').addEventListener('click', applyFilters);
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') applyFilters();
+    });
+    document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+    document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+      const catSelect = document.getElementById('categorySelect');
+      if (catSelect) catSelect.value = '';
+      const sortSelect = document.getElementById('sortSelect');
+      if (sortSelect) sortSelect.value = 'az';
+      document.getElementById('searchInput').value = '';
+      applyFilters();
+    });
+
+    document.getElementById('cartButton').addEventListener('click', () => {
+      const panel = document.getElementById('cartPanel');
+      const isHidden = panel.hasAttribute('hidden');
+      if (isHidden) panel.removeAttribute('hidden'); else panel.setAttribute('hidden', '');
+    });
+
+    document.getElementById('clearCartBtn').addEventListener('click', () => {
+      cart.items = [];
+      saveCart();
+      renderCart();
+    });
+
+    // ==========================
+    // CONFIGURACIÓN WHATSAPP
+    // ==========================
+
+    // Teléfono de WhatsApp de la empresa (SIN +, sin espacios, con indicativo de país)
+    // EJEMPLO COLOMBIA: 57 + número
+    const WHATSAPP_PHONE = '573223054722'; // <-- CAMBIA ESTE NÚMERO POR EL TUYO
+
+    function buildWhatsAppMessage() {
+      if (!cart.items.length) return 'Hola, me gustaría hacer un pedido, pero mi carrito está vacío.';
+      const currency = '$'; // símbolo de moneda
+      let lines = [];
+      lines.push('Hola, me gustaría finalizar mi compra.');
+      lines.push('Detalle del carrito:');
+      cart.items.forEach(it => {
+        const unit = `${currency}${it.price.toFixed(2)}`;
+        const subtotal = `${currency}${(it.price * it.qty).toFixed(2)}`;
+        lines.push(`- ${it.name} x${it.qty} | Unit: ${unit} | Subtotal: ${subtotal}`);
+      });
+      const total = cart.items.reduce((acc, it) => acc + it.price * it.qty, 0);
+      lines.push(`Total a pagar: ${currency}${total.toFixed(2)}`);
+      lines.push('Gracias.');
+      return lines.join('\n');
+    }
+
+    function openWhatsAppWithCart() {
+      const text = encodeURIComponent(buildWhatsAppMessage());
+      // API oficial de WhatsApp con teléfono + mensaje
+      const url = `https://api.whatsapp.com/send?phone=${WHATSAPP_PHONE}&text=${text}`;
+      window.open(url, '_blank', 'noopener');
+    }
+
+    document.getElementById('checkoutBtn').addEventListener('click', () => {
+      openWhatsAppWithCart();
+    });
+
+    // Inicializar enlace de la burbuja de WhatsApp
+    function updateWhatsAppBubbleLink() {
+      const bubble = document.getElementById('whatsappBubble');
+      if (!bubble) return;
+      const baseMsg = encodeURIComponent('Hola, me gustaría recibir información.');
+      bubble.href = `https://api.whatsapp.com/send?phone=${WHATSAPP_PHONE}&text=${baseMsg}`;
+    }
+    updateWhatsAppBubbleLink();
+
+    // Inicialización
+    loadCart();
+    renderCart();
+    applyFilters();
+  </script>
+</body>
+</html>
