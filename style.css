@@ -1,4 +1,4 @@
-/*
+/* 
   Bonita Tú - Estilos base
   - Paleta principal: #e91e63 (primario), tonos neutros para fondo y texto.
   - Diseño minimalista, limpio y responsivo.
@@ -150,7 +150,7 @@ button { cursor: pointer; }
 #main { padding: 16px; max-width: 1200px; margin: 0 auto; }
 
 /* Filters */
-/* Barra de filtros fija debajo del header */
+/* Barra de filtros fija debajo del header (solo base, luego lo tocamos en mobile) */
 #filters {
   position: sticky;
   top: 72px; /* altura del header ligeramente mayor */
@@ -351,3 +351,18 @@ button { cursor: pointer; }
 
 /* Compensación del contenido por header fijo + filtros sticky */
 body { padding-top: 124px; /* ~72 header + ~52 filtros */ }
+
+/* 🔧 Ajustes específicos para smartphone:
+   - Quitamos sticky de filtros
+   - Reducimos el padding-top del body para que no se vea tanto espacio en blanco
+*/
+@media (max-width: 600px) {
+  #filters {
+    position: static;
+    top: auto;
+  }
+
+  body {
+    padding-top: 96px; /* header fijo, pero sin filtros sticky */
+  }
+}
