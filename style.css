@@ -26,6 +26,7 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
+  padding-top: 0 !important;  /* antes tenías ~124px */
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   background: linear-gradient(180deg, #fff, var(--bg));
   color: var(--text-strong);
@@ -37,8 +38,7 @@ button { cursor: pointer; }
 
 /* Header */
 #header {
-  /* Ya NO es fijo, se comporta normal en el flujo de la página */
-  position: static;
+  position: relative !important;   /* en vez de fixed */
   top: auto;
   left: auto;
   right: auto;
@@ -127,7 +127,7 @@ button { cursor: pointer; }
 #cartPanel {
   position: fixed;
   right: 16px;
-  top: 16px; /* antes estaba 72px pensando en header fijo; ahora lo pegamos más arriba */
+  top: 16px;  /* antes 72px pensando en header fijo */
   width: min(92vw, 380px);
   background: var(--surface);
   border: 1px solid var(--border);
@@ -152,7 +152,7 @@ button { cursor: pointer; }
 /* Filters */
 #filters {
   position: sticky;
-  top: 0; /* ya no tenemos header fijo, así que se pega al inicio de la ventana */
+  top: 0;
   z-index: 150;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -348,7 +348,7 @@ button { cursor: pointer; }
 */
 @media (max-width: 600px) {
   #filters {
-    position: static;
-    top: auto;
+    position: static !important;
+    top: auto !important;
   }
 }
