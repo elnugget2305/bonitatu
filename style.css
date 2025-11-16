@@ -37,10 +37,11 @@ button { cursor: pointer; }
 
 /* Header */
 #header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  /* Ya NO es fijo, se comporta normal en el flujo de la página */
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
   z-index: 200;
   background: var(--color-primary);
   color: #fff;
@@ -126,14 +127,14 @@ button { cursor: pointer; }
 #cartPanel {
   position: fixed;
   right: 16px;
-  top: 72px;
+  top: 16px; /* antes estaba 72px pensando en header fijo; ahora lo pegamos más arriba */
   width: min(92vw, 380px);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-2);
   padding: 16px;
-  z-index: 1000; /* por encima de #filters (150) y header (200) */
+  z-index: 1000;
 }
 #cartPanel h2 { margin: 0 0 8px; font-size: 1.1rem; }
 #cartList { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 8px; max-height: 40vh; overflow:auto; }
@@ -146,14 +147,12 @@ button { cursor: pointer; }
 #checkoutBtn:hover { filter: brightness(1.05); }
 
 /* Main layout */
-/* El main comienza después del header + barra de filtros */
 #main { padding: 16px; max-width: 1200px; margin: 0 auto; }
 
 /* Filters */
-/* Barra de filtros fija debajo del header (solo base, luego lo tocamos en mobile) */
 #filters {
   position: sticky;
-  top: 72px; /* altura del header ligeramente mayor */
+  top: 0; /* ya no tenemos header fijo, así que se pega al inicio de la ventana */
   z-index: 150;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -196,10 +195,7 @@ button { cursor: pointer; }
 #categorySelect { min-height: 42px; }
 #categorySelect[size], #categorySelect[multiple][size] { height: auto; }
 
-/* Variante estética para selects: borde suave y esquinas redondeadas acorde a la marca */
-#filters select {
-  background-color: #fff;
-}
+#filters select { background-color: #fff; }
 #filters button {
   padding: 10px 12px;
   border-radius: var(--radius-sm);
@@ -225,7 +221,7 @@ button { cursor: pointer; }
   padding: 6px 8px;
   box-shadow: var(--shadow-1);
   transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
-  width: calc(100% - 24px); /* ocupa casi todo el ancho de la tarjeta */
+  width: calc(100% - 24px);
 }
 .qty-control:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
 .qty-control:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-50); }
@@ -274,7 +270,7 @@ button { cursor: pointer; }
   .qty-control {
     gap: 10px;
     padding: 8px 10px;
-    width: auto;              /* en escritorio ya no fuerza todo el ancho */
+    width: auto;
     margin: 10px 12px 12px;
   }
   .qty-btn {
@@ -349,20 +345,10 @@ button { cursor: pointer; }
   #productsGrid { grid-template-columns: repeat(5, 1fr); gap: 20px; }
 }
 
-/* Compensación del contenido por header fijo + filtros sticky */
-body { padding-top: 124px; /* ~72 header + ~52 filtros */ }
-
-/* 🔧 Ajustes específicos para smartphone:
-   - Quitamos sticky de filtros
-   - Reducimos el padding-top del body para que no se vea tanto espacio en blanco
 */
 @media (max-width: 600px) {
   #filters {
     position: static;
     top: auto;
-  }
-
-  body {
-    padding-top: 96px; /* header fijo, pero sin filtros sticky */
   }
 }
